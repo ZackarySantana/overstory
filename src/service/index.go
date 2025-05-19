@@ -7,6 +7,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 func (s *Service) EnsureIndexes(ctx context.Context) error {
@@ -23,6 +24,7 @@ func (s *Service) ensureIndexesForProject(ctx context.Context) error {
 			{Key: "organization_id", Value: 1},
 			{Key: "name", Value: 1},
 		},
+		Options: options.Index().SetUnique(true),
 	})
 
 	fmt.Println(index)
