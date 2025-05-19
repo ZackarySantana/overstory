@@ -2,25 +2,31 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
+	"os"
 
 	"github.com/zackarysantana/overstory/cmd/internal"
 	"github.com/zackarysantana/overstory/src/entities"
 	"github.com/zackarysantana/overstory/src/service"
+	"github.com/zackarysantana/overstory/src/slogctx"
 )
 
 func main() {
 	ctx := context.Background()
 
-	mongoClient, cleanup, err := internal.UseMongoDBContainer(ctx)
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	ctx = slogctx.WithLogger(ctx, logger)
+
+	mongoClient, err := internal.CreateMongoClient(ctx)
 	if err != nil {
-		panic(err)
+		logger.ErrorContext(ctx, "failed to create MongoDB client", "error", err)
+		os.Exit(1)
 	}
-	defer cleanup()
 
 	s := service.New(mongoClient.Database("test"))
 	if err := s.EnsureIndexes(ctx); err != nil {
-		panic(err)
+		logger.ErrorContext(ctx, "failed to ensure indexes", "error", err)
+		os.Exit(1)
 	}
 
 	newOrganization := &entities.Organization{
@@ -32,24 +38,27 @@ func main() {
 	}
 
 	if err := s.CreateOrganizationAndUser(ctx, newOrganization, newUser); err != nil {
-		panic(fmt.Errorf("failed to create organization and user: %w", err))
+		logger.ErrorContext(ctx, "failed to create organization and user", "error", err)
+		os.Exit(1)
 	}
 
 	newProject := &entities.Project{
 		Name: "Test Project",
 	}
 
-	fmt.Println(newOrganization)
+	logger.InfoContext(ctx, "created organization", "organization", newOrganization)
 
-	fmt.Println(newUser)
-
-	if err := s.CreateProject(ctx, newUser, newProject); err != nil {
-		panic(fmt.Errorf("failed to create project: %w", err))
-	}
-	fmt.Println("1st project", newProject)
+	logger.InfoContext(ctx, "created user", "user", newUser)
 
 	if err := s.CreateProject(ctx, newUser, newProject); err != nil {
-		panic(fmt.Errorf("failed to create project: %w", err))
+		logger.ErrorContext(ctx, "failed to create project", "error", err)
+		os.Exit(1)
 	}
-	fmt.Println("2nd project", newProject)
+	logger.InfoContext(ctx, "created project 1st", "project", newProject)
+
+	if err := s.CreateProject(ctx, newUser, newProject); err != nil {
+		logger.ErrorContext(ctx, "failed to create project", "error", err)
+		os.Exit(1)
+	}
+	logger.InfoContext(ctx, "created project 2nd", "project", newProject)
 }
