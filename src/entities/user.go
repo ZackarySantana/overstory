@@ -43,4 +43,6 @@ type User struct {
 	OrganizationRole OrganizationRole
 
 	ProjectToRole map[bson.ObjectID]ProjectRole
+
+	Username string
 }
