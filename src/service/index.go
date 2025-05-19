@@ -20,8 +20,8 @@ func (s *Service) EnsureIndexes(ctx context.Context) error {
 func (s *Service) ensureIndexesForProject(ctx context.Context) error {
 	index, err := s.db.Collection("projects").Indexes().CreateOne(ctx, mongo.IndexModel{
 		Keys: bson.D{
-			{Key: "OrganizationID", Value: 1},
-			{Key: "Name", Value: 1},
+			{Key: "organization_id", Value: 1},
+			{Key: "name", Value: 1},
 		},
 	})
 

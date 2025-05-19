@@ -17,22 +17,54 @@ func (s *Service) CreateProject(ctx context.Context, actor *entities.User, newPr
 		return ErrUnauthorized
 	}
 
-	newProject.OrganizationID = actor.OrganizationID
-	inserted, err := s.db.Collection("projects").InsertOne(ctx, newProject)
+	session, err := s.db.Client().StartSession()
 	if err != nil {
-		return fmt.Errorf("database error: %w", err)
+		return fmt.Errorf("failed to start session: %w", err)
 	}
-	newProject.ID = inserted.InsertedID.(bson.ObjectID)
+	defer session.EndSession(ctx)
 
-	return nil
+	newProject.ID = bson.ObjectID{}
+	newProject.OrganizationID = actor.OrganizationID
+	_, err = session.WithTransaction(ctx, func(ctx context.Context) (interface{}, error) {
+		inserted, err := s.db.Collection("projects").InsertOne(ctx, newProject)
+		if err != nil {
+			return nil, fmt.Errorf("database error: %w", err)
+		}
+		newProject.ID = inserted.InsertedID.(bson.ObjectID)
+
+		if _, err := s.db.Collection("users").UpdateByID(ctx, actor.ID,
+			bson.M{"$set": bson.M{
+				fmt.Sprintf("projecttorole.%s", newProject.ID.Hex()): entities.ProjectRole{
+					Role: entities.Role{Role: "admin"},
+				},
+			}},
+		); err != nil {
+			return nil, fmt.Errorf("failed to update user with new project: %w", err)
+		}
+		actor.SetProjectRole(newProject.ID, entities.ProjectRole{
+			Role: entities.Role{Role: "admin"},
+		})
+
+		return nil, nil
+	})
+
+	return err
 }
 
+// CreateOrganizationAndUser creates a new organization and a new user
+// belonging to that organization. The user is assigned the "admin" role
+// in the organization.
+// The organization's ID, the user's OrganizationID, and the user's ID
+// are set within this function.
 func (s *Service) CreateOrganizationAndUser(ctx context.Context, newOrg *entities.Organization, newUser *entities.User) error {
 	session, err := s.db.Client().StartSession()
 	if err != nil {
 		return fmt.Errorf("failed to start session: %w", err)
 	}
+	defer session.EndSession(ctx)
 
+	newOrg.ID = bson.ObjectID{}
+	newUser.ID = bson.ObjectID{}
 	_, err = session.WithTransaction(ctx, func(ctx context.Context) (interface{}, error) {
 		insertedOrg, err := s.db.Collection("organizations").InsertOne(ctx, newOrg)
 		if err != nil {

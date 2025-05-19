@@ -5,7 +5,7 @@ import "go.mongodb.org/mongo-driver/v2/bson"
 type Project struct {
 	ID bson.ObjectID `bson:"_id,omitempty"`
 
-	OrganizationID bson.ObjectID
+	OrganizationID bson.ObjectID `bson:"organization_id,omitempty"`
 
-	Name string
+	Name string `bson:"name,omitempty"`
 }

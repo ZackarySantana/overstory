@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/zackarysantana/overstory/cmd/api/internal"
+	"github.com/zackarysantana/overstory/cmd/internal"
 	"github.com/zackarysantana/overstory/src/entities"
 	"github.com/zackarysantana/overstory/src/service"
 )
@@ -46,6 +46,10 @@ func main() {
 	if err := s.CreateProject(ctx, newUser, newProject); err != nil {
 		panic(fmt.Errorf("failed to create project: %w", err))
 	}
+	fmt.Println("1st project", newProject)
 
-	fmt.Println(newProject)
+	if err := s.CreateProject(ctx, newUser, newProject); err != nil {
+		panic(fmt.Errorf("failed to create project: %w", err))
+	}
+	fmt.Println("2nd project", newProject)
 }

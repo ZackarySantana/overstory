@@ -5,7 +5,7 @@ import (
 )
 
 type Role struct {
-	Role string
+	Role string `bson:"role,omitempty"`
 }
 
 const (
@@ -21,9 +21,9 @@ func (r *Role) IsAdmin() bool {
 }
 
 type OrganizationRole struct {
-	Role
+	Role `bson:"role,omitempty"`
 
-	CreateProject bool
+	CreateProject bool `bson:"create_project,omitempty"`
 }
 
 func (r *OrganizationRole) CanCreateProject() bool {
@@ -35,16 +35,23 @@ func (r *OrganizationRole) CanCreateProject() bool {
 }
 
 type ProjectRole struct {
-	Role
+	Role `bson:"role,omitempty"`
 }
 
 type User struct {
 	ID bson.ObjectID `bson:"_id,omitempty"`
 
-	OrganizationID   bson.ObjectID
-	OrganizationRole OrganizationRole
+	OrganizationID   bson.ObjectID    `bson:"organization_id,omitempty"`
+	OrganizationRole OrganizationRole `bson:"organization_role,omitempty"`
 
-	ProjectToRole map[bson.ObjectID]ProjectRole
+	ProjectToRole map[bson.ObjectID]ProjectRole `bson:"project_to_role,omitempty"`
 
-	Username string
+	Username string `bson:"username,omitempty"`
+}
+
+func (u *User) SetProjectRole(projectID bson.ObjectID, role ProjectRole) {
+	if u.ProjectToRole == nil {
+		u.ProjectToRole = make(map[bson.ObjectID]ProjectRole)
+	}
+	u.ProjectToRole[projectID] = role
 }
