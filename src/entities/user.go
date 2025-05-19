@@ -1,7 +1,20 @@
 package entities
 
-type User struct {
-	ID any `bson:"_id"`
+import "go.mongodb.org/mongo-driver/v2/bson"
 
-	OrganizationID any `bson:"project_id"`
+type Role string
+
+const (
+	RoleAdmin  Role = "admin"
+	RoleMember Role = "member"
+	RoleGuest  Role = "guest"
+)
+
+type User struct {
+	ID bson.ObjectID `bson:"_id"`
+
+	OrganizationID   bson.ObjectID
+	OrganizationRole Role
+
+	ProjectToRole map[bson.ObjectID]Role
 }

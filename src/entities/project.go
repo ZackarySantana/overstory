@@ -1,7 +1,9 @@
 package entities
 
+import "go.mongodb.org/mongo-driver/v2/bson"
+
 type Project struct {
-	ID any `bson:"_id"`
+	ID bson.ObjectID `bson:"_id"`
 
 	Name string
 }
