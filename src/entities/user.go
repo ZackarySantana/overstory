@@ -1,6 +1,8 @@
 package entities
 
-import "go.mongodb.org/mongo-driver/v2/bson"
+import (
+	"go.mongodb.org/mongo-driver/v2/bson"
+)
 
 type Role struct {
 	Role string
@@ -29,7 +31,7 @@ func (r *OrganizationRole) CanCreateProject() bool {
 		return false
 	}
 
-	return r.IsAdmin()
+	return r.IsAdmin() || r.CreateProject
 }
 
 type ProjectRole struct {
@@ -37,7 +39,7 @@ type ProjectRole struct {
 }
 
 type User struct {
-	ID bson.ObjectID `bson:"_id"`
+	ID bson.ObjectID `bson:"_id,omitempty"`
 
 	OrganizationID   bson.ObjectID
 	OrganizationRole OrganizationRole
