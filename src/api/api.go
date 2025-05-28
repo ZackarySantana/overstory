@@ -34,6 +34,16 @@ func New(ctx context.Context, service *service.Service) *clientmux.ClientMux {
 		},
 	)
 
+	clientmux.HandleJSON(
+		mux,
+		http.MethodGet,
+		"/users/get",
+		func(ctx context.Context, in any) (CreateUserResp, error) {
+			api.healthCheck(nil, nil)
+			return CreateUserResp{ID: "42"}, nil
+		},
+	)
+
 	return mux
 }
 

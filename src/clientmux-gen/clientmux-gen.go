@@ -20,6 +20,7 @@ package clientmux
 
 import (
 	"bytes"
+	"fmt"
 	"go/format"
 	"net/http"
 	"text/template"
@@ -50,7 +51,7 @@ type Client struct {
 	hc   *http.Client
 }
 
-func New(baseURL string, hc *http.Client) *Client {
+func NewClient(baseURL string, hc *http.Client) *Client {
 	if hc == nil { hc = http.DefaultClient }
 	return &Client{base: baseURL, hc: hc}
 }
@@ -64,14 +65,15 @@ func (e *StatusError) Error() string { return fmt.Sprintf("http %d: %s", e.Code,
 func (e *StatusError) Status() int   { return e.Code }
 
 {{range .Routes}}
+{{if .HasBody}}
 func (c *Client) {{.Func}}(ctx context.Context, in {{.Req}}) ({{.Resp}}, error) {
 	var buf bytes.Buffer
-	{{if .HasBody}}
-	if err := json.NewEncoder(&buf).Encode(in); err != nil { return {{.ZeroResp}}, err }
+	if err := json.NewEncoder(&buf).Encode(*in); err != nil { return {{.ZeroResp}}, err }
 	req, err := http.NewRequestWithContext(ctx, "{{.Method}}", c.base+"{{.Pattern}}", &buf)
-	{{else}}
+{{else}}
+func (c *Client) {{.Func}}(ctx context.Context) ({{.Resp}}, error) {
 	req, err := http.NewRequestWithContext(ctx, "{{.Method}}", c.base+"{{.Pattern}}", nil)
-	{{end}}
+{{end}}
 	if err != nil { return {{.ZeroResp}}, err }
 	req.Header.Set("Content-Type", "application/json")
 
@@ -85,7 +87,7 @@ func (c *Client) {{.Func}}(ctx context.Context, in {{.Req}}) ({{.Resp}}, error) 
 	}
 
 	var out {{.Resp}}
-	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(out); err != nil {
 		return {{.ZeroResp}}, err
 	}
 	return out, nil
@@ -106,15 +108,24 @@ func (c *Client) {{.Func}}(ctx context.Context, in {{.Req}}) ({{.Resp}}, error) 
 
 	c := ctx{Pkg: pkgName, PkgImp: pkgImp}
 	for _, rt := range mux.Routes() {
-		reqT, respT := rt.ReqType.String(), rt.RespType.String()
+		fmt.Println("rt", rt)
+		fmt.Println("rt.Method", rt.Method)
+		fmt.Println("rt.ReqType", rt.ReqType)
+		var reqT, respT string
+		if rt.ReqType != nil {
+			reqT = rt.ReqType.String()
+		}
+		if rt.RespType != nil {
+			respT = rt.RespType.String()
+		}
 		fn := exportable(methodName(rt.Pattern))
 		c.Routes = append(c.Routes, routeCtx{
 			Method:   rt.Method,
 			Pattern:  rt.Pattern,
 			Func:     fn,
-			Req:      reqT,
-			Resp:     respT,
-			ZeroResp: zero(respT),
+			Req:      fmt.Sprintf("*%s", reqT),
+			Resp:     fmt.Sprintf("*%s", respT),
+			ZeroResp: "nil",
 			HasBody:  rt.Method != http.MethodGet && rt.Method != http.MethodHead,
 		})
 	}
@@ -124,21 +135,6 @@ func (c *Client) {{.Func}}(ctx context.Context, in {{.Req}}) ({{.Resp}}, error) 
 		return nil, err
 	}
 	return format.Source(buf.Bytes())
-}
-
-// Helpers -------------------------------------------------------------
-
-func zero(typ string) string {
-	switch typ {
-	case "string":
-		return `""`
-	case "int", "int64", "float64":
-		return "0"
-	case "bool":
-		return "false"
-	default:
-		return typ + "{}"
-	}
 }
 
 func methodName(p string) string {
