@@ -13,6 +13,9 @@ type API struct {
 	service *service.Service
 }
 
+type CreateUserReq struct{ Name string }
+type CreateUserResp struct{ ID string }
+
 func New(ctx context.Context, service *service.Service) *clientmux.ClientMux {
 	api := &API{
 		service: service,
@@ -20,9 +23,6 @@ func New(ctx context.Context, service *service.Service) *clientmux.ClientMux {
 
 	mux := clientmux.New()
 	// mux.HandleFunc("/api/v1/health", api.healthCheck)
-
-	type CreateUserReq struct{ Name string }
-	type CreateUserResp struct{ ID string }
 
 	clientmux.HandleJSON(
 		mux,
@@ -35,6 +35,10 @@ func New(ctx context.Context, service *service.Service) *clientmux.ClientMux {
 	)
 
 	return mux
+}
+
+func NewClient() *clientmux.ClientMux {
+	return New(context.Background(), nil)
 }
 
 func (api *API) healthCheck(w http.ResponseWriter, r *http.Request) {

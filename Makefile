@@ -1,0 +1,3 @@
+gen:
+	go install github.com/zackarysantana/overstory/cmd/clientmux-gen/
+	go generate ./...

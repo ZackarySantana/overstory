@@ -1,3 +1,3 @@
 package overstory
 
-//go:generate clientmux -pkg api -mux github.com/zackarysantana/overstory/internal/api.New -o ./api/client_gen.go
+//go:generate clientmux-gen -pkg overstory -mux github.com/zackarysantana/overstory/src/api.NewClient -o ./client_gen.go

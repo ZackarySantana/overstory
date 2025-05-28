@@ -23,10 +23,12 @@ import (
 	"go/format"
 	"net/http"
 	"text/template"
+
+	"github.com/zackarysantana/overstory/src/clientmux"
 )
 
 // Generate builds client source for the supplied mux.
-func Generate(mux *ClientMux, pkg string, varBaseURL string) ([]byte, error) {
+func Generate(mux *clientmux.ClientMux, pkgName, pkgImp string) ([]byte, error) {
 	const fileTmpl = `
 package {{.Pkg}}
 
@@ -37,6 +39,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"{{.PkgImp}}"
 )
 
 // Code-gen: DO NOT EDIT.
@@ -46,9 +50,9 @@ type Client struct {
 	hc   *http.Client
 }
 
-func New({{.BaseVar}} string, hc *http.Client) *Client {
+func New(baseURL string, hc *http.Client) *Client {
 	if hc == nil { hc = http.DefaultClient }
-	return &Client{base: {{.BaseVar}}, hc: hc}
+	return &Client{base: baseURL, hc: hc}
 }
 
 type StatusError struct {
@@ -95,12 +99,12 @@ func (c *Client) {{.Func}}(ctx context.Context, in {{.Req}}) ({{.Resp}}, error) 
 		HasBody             bool
 	}
 	type ctx struct {
-		Pkg     string
-		BaseVar string
-		Routes  []routeCtx
+		Pkg    string
+		Routes []routeCtx
+		PkgImp string
 	}
 
-	c := ctx{Pkg: pkg, BaseVar: varBaseURL}
+	c := ctx{Pkg: pkgName, PkgImp: pkgImp}
 	for _, rt := range mux.Routes() {
 		reqT, respT := rt.ReqType.String(), rt.RespType.String()
 		fn := exportable(methodName(rt.Pattern))

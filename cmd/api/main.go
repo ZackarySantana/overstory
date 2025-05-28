@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/zackarysantana/overstory/cmd/internal"
-	"github.com/zackarysantana/overstory/internal/api"
+	"github.com/zackarysantana/overstory/src/api"
 	"github.com/zackarysantana/overstory/src/clientmux"
 	"github.com/zackarysantana/overstory/src/logging/slogctx"
 	"github.com/zackarysantana/overstory/src/logging/slogerr"
