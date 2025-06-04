@@ -8,7 +8,6 @@ import (
 
 	"github.com/zackarysantana/overstory/cmd/internal"
 	"github.com/zackarysantana/overstory/src/api"
-	"github.com/zackarysantana/overstory/src/clientmux"
 	"github.com/zackarysantana/overstory/src/logging/slogctx"
 	"github.com/zackarysantana/overstory/src/logging/slogerr"
 	"github.com/zackarysantana/overstory/src/service"
@@ -41,18 +40,4 @@ func main() {
 	if err := http.ListenAndServe(":8080", server); err != nil {
 		logger.ErrorContext(ctx, "failed to start server", slogerr.ErrorKey, err)
 	}
-
-	type CreateUserReq struct{ Name string }
-	type CreateUserResp struct{ ID string }
-
-	mux := clientmux.New()
-
-	clientmux.HandleJSON(
-		mux,
-		http.MethodPost,
-		"/users",
-		func(ctx context.Context, in CreateUserReq) (CreateUserResp, error) {
-			return CreateUserResp{ID: "42"}, nil
-		},
-	)
 }
