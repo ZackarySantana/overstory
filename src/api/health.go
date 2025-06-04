@@ -8,8 +8,6 @@ import (
 
 func healthCheck(_ *API) handlers.GetHandler {
 	return func(r *http.Request) *handlers.Response {
-		return &handlers.Response{
-			Status: http.StatusTeapot,
-		}
+		return nil
 	}
 }

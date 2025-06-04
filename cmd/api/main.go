@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 
@@ -35,9 +36,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	server := api.New(ctx, s)
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: api.New(ctx, s),
+		BaseContext: func(_ net.Listener) context.Context {
+			return ctx
+		},
+		ErrorLog: slog.NewLogLogger(handler, slog.LevelError),
+	}
 
-	if err := http.ListenAndServe(":8080", server); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		logger.ErrorContext(ctx, "failed to start server", slogerr.ErrorKey, err)
 	}
 }
