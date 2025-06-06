@@ -1,0 +1,15 @@
+ARG GO_VERSION=1.24.3-bookworm
+FROM golang:${GO_VERSION}
+
+RUN go install github.com/mitranim/gow@latest
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+# Copy the rest of the required files
+COPY src src
+COPY internal internal
+COPY cmd cmd
+
+CMD gow -r=false run cmd/api/main.go

@@ -1,0 +1,6 @@
+FROM node:23
+WORKDIR /app
+
+COPY . .
+
+CMD ["npm", "run", "dev"]
