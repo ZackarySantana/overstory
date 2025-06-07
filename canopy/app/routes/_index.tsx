@@ -2,6 +2,15 @@ import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import { Button } from "~/components/ui/button";
 import { ThemeSwitch } from "~/components/theme-switch";
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarHeader,
+    SidebarProvider,
+    SidebarTrigger,
+} from "~/components/ui/sidebar";
 
 export function meta({}: Route.MetaArgs) {
     return [
@@ -10,7 +19,7 @@ export function meta({}: Route.MetaArgs) {
     ];
 }
 
-export default function Home() {
+export default function Home(children: { children: React.ReactNode }) {
     return (
         <>
             <p>Hello</p>

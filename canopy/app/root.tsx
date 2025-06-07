@@ -11,6 +11,7 @@ import { ThemeProvider } from "./components/theme-provider";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Sidebar } from "./components/sidebar/sidebar";
 
 export const links: Route.LinksFunction = () => [
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -38,7 +39,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Links />
             </head>
             <body className="min-h-screen">
-                <ThemeProvider attribute="class">{children}</ThemeProvider>
+                <ThemeProvider attribute="class">
+                    <Sidebar>{children}</Sidebar>
+                </ThemeProvider>
                 <ScrollRestoration />
                 <Scripts />
             </body>
